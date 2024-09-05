@@ -1,0 +1,21 @@
+# SDK build image
+FROM node:16.19.0-alpine AS build
+
+WORKDIR /app
+
+## Copy source directories
+## Copy api project
+COPY ./src/database/ /app/src/database/
+COPY ./src/common/enums/ /app/src/common/enums/
+COPY ./*.json /app/
+
+## Copy package
+COPY *.json /app/
+
+## Install libraries
+RUN npm install --legacy-peer-deps --omit=dev
+RUN npm i -D tsconfig-paths --legacy-peer-deps
+RUN npm install ts-node -g
+
+## Run migration
+ENTRYPOINT [ "ts-node", "--project", "tsconfig.build.json", "-r", "tsconfig-paths/register", "./node_modules/typeorm/cli", "migration:run", "-d", "/app/src/database/data-source.ts"]
